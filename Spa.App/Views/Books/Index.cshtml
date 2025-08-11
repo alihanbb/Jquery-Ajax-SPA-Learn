@@ -1,0 +1,495 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Books Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="successMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="errorMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="infoMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <h2 class="mb-4">
+            <i class="bi bi-book"></i> Books Management
+        </h2>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-ul"></i> Book List</span>
+                <div>
+                    <button class="btn btn-primary btn-sm me-2" id="btnAddNew">
+                        <i class="bi bi-plus-circle"></i> Add New Book
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="loadBooks">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh List
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Genre</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noBooksMessage" class="text-center text-muted d-none">
+                    <i class="bi bi-inbox"></i>
+                    <p>No books found. Add your first book!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Modal -->
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Add New Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                        <div class="mb-3">
+                            <label for="BookName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="BookName" name="Name" required />
+                            <span class="text-danger field-validation-error" id="bookNameError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="BookAuthor" class="form-label">Author</label>
+                            <input type="text" class="form-control" id="BookAuthor" name="Author" required />
+                            <span class="text-danger field-validation-error" id="bookAuthorError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="BookISBN" class="form-label">ISBN</label>
+                            <input type="text" class="form-control" id="BookISBN" name="ISBN" required />
+                            <span class="text-danger field-validation-error" id="bookISBNError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="BookGenre" class="form-label">Genre</label>
+                            <input type="text" class="form-control" id="BookGenre" name="Genre" required />
+                            <span class="text-danger field-validation-error" id="bookGenreError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="BookDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="BookDescription" name="Description" required />
+                            <span class="text-danger field-validation-error" id="bookDescriptionError"></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnSave">Save Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Book Modal -->
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateModalLabel">Update Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateForm">
+                        <input type="hidden" id="updateId" name="Id" />
+                        <div class="mb-3">
+                            <label for="updateBookName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="updateBookName" name="Name" required />
+                            <span class="text-danger field-validation-error" id="updateBookNameError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookAuthor" class="form-label">Author</label>
+                            <input type="text" class="form-control" id="updateBookAuthor" name="Author" required />
+                            <span class="text-danger field-validation-error" id="updateBookAuthorError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookISBN" class="form-label">ISBN</label>
+                            <input type="text" class="form-control" id="updateBookISBN" name="ISBN" required />
+                            <span class="text-danger field-validation-error" id="updateBookISBNError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookGenre" class="form-label">Genre</label>
+                            <input type="text" class="form-control" id="updateBookGenre" name="Genre" required />
+                            <span class="text-danger field-validation-error" id="updateBookGenreError"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateBookDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="updateBookDescription" name="Description" required />
+                            <span class="text-danger field-validation-error" id="updateBookDescriptionError"></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="btnUpdate">Update Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this book?</p>
+                    <input type="hidden" id="deleteId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="btnDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            loadBooks();
+
+            // Toast functions
+            function showToast(type, message) {
+                const toastId = type + 'Toast';
+                const messageId = type + 'Message';
+                $('#' + messageId).text(message);
+                const toast = new bootstrap.Toast(document.getElementById(toastId));
+                toast.show();
+            }
+            function showSuccess(message) { showToast('success', message); }
+            function showError(message) { showToast('error', message); }
+            function showInfo(message) { showToast('info', message); }
+
+            // Add New Book button click
+            $("#btnAddNew").click(function () {
+                $("#addForm")[0].reset();
+                $(".field-validation-error").text("");
+                new bootstrap.Modal(document.getElementById('addModal')).show();
+            });
+
+            // Save Book
+            $("#btnSave").click(function () {
+                var bookData = {
+                    Name: $("#BookName").val(),
+                    Author: $("#BookAuthor").val(),
+                    ISBN: $("#BookISBN").val(),
+                    Genre: $("#BookGenre").val(),
+                    Description: $("#BookDescription").val()
+                };
+                if (!validateForm(bookData, "add")) return;
+                $.ajax({
+                    url: '/Books/AddBook',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(bookData),
+                    success: function (response) {
+                        if (response.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+                            showSuccess('Book "' + bookData.Name + '" added successfully!');
+                            loadBooks();
+                        } else {
+                            // Server-side validation hatalarını göster
+                            if (response.errors) {
+                                displayValidationErrors(response.errors, "add");
+                            } else {
+                                showError(response.message || 'Error adding book. Please check your input and try again.');
+                            }
+                        }
+                    },
+                    error: function () {
+                        showError('Error adding book. Please check your input and try again.');
+                    }
+                });
+            });
+
+            // Edit button click
+            $(document).on("click", ".btn-edit", function () {
+                var bookId = $(this).data("id");
+                $.ajax({
+                    url: '/Books/UpdateBook?id=' + bookId,
+                    type: 'GET',
+                    success: function (book) {
+                        if (book) {
+                            $("#updateId").val(book.id);
+                            $("#updateBookName").val(book.name);
+                            $("#updateBookAuthor").val(book.author);
+                            $("#updateBookISBN").val(book.isbn);
+                            $("#updateBookGenre").val(book.genre);
+                            $("#updateBookDescription").val(book.description);
+                            $(".field-validation-error").text("");
+                            new bootstrap.Modal(document.getElementById('updateModal')).show();
+                        } else {
+                            showError('Book not found.');
+                        }
+                    },
+                    error: function () {
+                        showError('Error fetching book details.');
+                    }
+                });
+            });
+
+            // Update Book
+            $("#btnUpdate").click(function () {
+                var bookData = {
+                    Id: parseInt($("#updateId").val()),
+                    Name: $("#updateBookName").val(),
+                    Author: $("#updateBookAuthor").val(),
+                    ISBN: $("#updateBookISBN").val(),
+                    Genre: $("#updateBookGenre").val(),
+                    Description: $("#updateBookDescription").val()
+                };
+                if (!validateForm(bookData, "update")) return;
+                $.ajax({
+                    url: '/Books/UpdateBook',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(bookData),
+                    success: function (response) {
+                        if (response.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('updateModal')).hide();
+                            showSuccess('Book "' + bookData.Name + '" updated successfully!');
+                            loadBooks();
+                        } else {
+                            // Server-side validation hatalarını göster
+                            if (response.errors) {
+                                displayValidationErrors(response.errors, "update");
+                            } else {
+                                showError(response.message || 'Error updating book. Please check your input and try again.');
+                            }
+                        }
+                    },
+                    error: function () {
+                        showError('Error updating book. Please check your input and try again.');
+                    }
+                });
+            });
+
+            // Delete button click
+            $(document).on("click", ".btn-delete", function () {
+                var bookId = $(this).data("id");
+                $("#deleteId").val(bookId);
+                new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            });
+
+            // Confirm Delete
+            $("#btnDelete").click(function () {
+                var bookId = $("#deleteId").val();
+                $.ajax({
+                    url: '/Books/DeleteBook?id=' + bookId,
+                    type: 'GET',
+                    success: function (response) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                        if (response.success) {
+                            showSuccess('Book deleted successfully!');
+                            loadBooks();
+                        } else {
+                            showError(response.message || 'Error deleting book. Please try again.');
+                        }
+                    },
+                    error: function () {
+                        showError('Error deleting book. Please try again.');
+                    }
+                });
+            });
+
+            // Refresh button
+            $('#loadBooks').click(function () {
+                loadBooks();
+            });
+
+            // Load books
+            function loadBooks() {
+                $.ajax({
+                    url: '/Books/GetAllBooks',
+                    type: 'GET',
+                    success: function (data) {
+                        renderTable(data);
+                        if (data && data.length > 0) {
+                            showInfo('Books loaded successfully! (' + data.length + ' items)');
+                        } else {
+                            showInfo('No books found.');
+                        }
+                    },
+                    error: function () {
+                        showError('Error loading books. Please try again.');
+                    }
+                });
+            }
+
+            // Render table
+            function renderTable(books) {
+                var tableBody = $("#booksTableBody");
+                tableBody.empty();
+                if (books && books.length > 0) {
+                    $('#noBooksMessage').addClass('d-none');
+                    $.each(books, function (index, book) {
+                        var row = '<tr id="row_' + book.id + '">';
+                        row += '<td>' + (index + 1) + '</td>';
+                        row += '<td><strong>' + book.name + '</strong></td>';
+                        row += '<td>' + book.author + '</td>';
+                        row += '<td>' + book.genre + '</td>';
+                        row += '<td>' + book.description + '</td>';
+                        row += '<td>';
+                        row += '<button class="btn btn-sm btn-danger me-2 btn-delete" data-id="' + book.id + '" title="Delete Book">';
+                        row += '<i class="bi bi-trash"></i> Delete</button> ';
+                        row += '<button class="btn btn-sm btn-warning btn-edit" data-id="' + book.id + '" title="Edit Book">';
+                        row += '<i class="bi bi-pencil"></i> Edit</button>';
+                        row += '</td>';
+                        row += '</tr>';
+                        tableBody.append(row);
+                    });
+                } else {
+                    $('#noBooksMessage').removeClass('d-none');
+                    tableBody.append('<tr><td colspan="6" class="text-center">No books found. Add your first book!</td></tr>');
+                }
+            }
+
+            // Form validation
+            function validateForm(data, formType) {
+                var isValid = true;
+                var prefix = formType === "update" ? "update" : "";
+                
+                // Önce tüm hata mesajlarını temizle
+                $(".field-validation-error").text("");
+                
+                // Name validation
+                if (!data.Name || data.Name.trim() === "") {
+                    $("#" + prefix + "BookNameError").text("Kitap adı zorunludur.");
+                    isValid = false;
+                } else if (data.Name.trim().length < 2) {
+                    $("#" + prefix + "BookNameError").text("Kitap adı en az 2 karakter olmalıdır.");
+                    isValid = false;
+                } else if (data.Name.trim().length > 100) {
+                    $("#" + prefix + "BookNameError").text("Kitap adı en fazla 100 karakter olmalıdır.");
+                    isValid = false;
+                }
+                
+                // Author validation
+                if (!data.Author || data.Author.trim() === "") {
+                    $("#" + prefix + "BookAuthorError").text("Yazar adı zorunludur.");
+                    isValid = false;
+                } else if (data.Author.trim().length > 100) {
+                    $("#" + prefix + "BookAuthorError").text("Yazar adı en fazla 100 karakter olmalıdır.");
+                    isValid = false;
+                }
+                
+                // ISBN validation
+                if (!data.ISBN || data.ISBN.trim() === "") {
+                    $("#" + prefix + "BookISBNError").text("ISBN zorunludur.");
+                    isValid = false;
+                } else if (data.ISBN.trim().length < 5) {
+                    $("#" + prefix + "BookISBNError").text("ISBN en az 5 karakter olmalıdır.");
+                    isValid = false;
+                } else if (data.ISBN.trim().length > 20) {
+                    $("#" + prefix + "BookISBNError").text("ISBN en fazla 20 karakter olmalıdır.");
+                    isValid = false;
+                }
+                
+                // Genre validation
+                if (!data.Genre || data.Genre.trim() === "") {
+                    $("#" + prefix + "BookGenreError").text("Tür zorunludur.");
+                    isValid = false;
+                } else if (data.Genre.trim().length > 50) {
+                    $("#" + prefix + "BookGenreError").text("Tür en fazla 50 karakter olmalıdır.");
+                    isValid = false;
+                }
+                
+                // Description validation (opsiyonel ama karakter sınırı var)
+                if (data.Description && data.Description.trim().length > 2000) {
+                    $("#" + prefix + "BookDescriptionError").text("Açıklama en fazla 2000 karakter olmalıdır.");
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+
+            // Server-side validation hatalarını göster
+            function displayValidationErrors(errors, formType) {
+                var prefix = formType === "update" ? "update" : "";
+                
+                // Önce tüm hata mesajlarını temizle
+                $(".field-validation-error").text("");
+                
+                // Her bir hata için ilgili alanı bul ve göster
+                $.each(errors, function (index, error) {
+                    var fieldName = error.Field.toLowerCase();
+                    var errorElementId = "";
+                    
+                    switch (fieldName) {
+                        case "name":
+                            errorElementId = "#" + prefix + "BookNameError";
+                            break;
+                        case "author":
+                            errorElementId = "#" + prefix + "BookAuthorError";
+                            break;
+                        case "isbn":
+                            errorElementId = "#" + prefix + "BookISBNError";
+                            break;
+                        case "genre":
+                            errorElementId = "#" + prefix + "BookGenreError";
+                            break;
+                        case "description":
+                            errorElementId = "#" + prefix + "BookDescriptionError";
+                            break;
+                    }
+                    
+                    if (errorElementId && error.Errors && error.Errors.length > 0) {
+                        $(errorElementId).text(error.Errors[0]); // İlk hatayı göster
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
